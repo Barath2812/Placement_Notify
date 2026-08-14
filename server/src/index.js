@@ -1,0 +1,159 @@
+const express = require('express');
+const cors = require('cors');
+const { initCron } = require('./cron');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Enable CORS
+const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
+app.use(cors({
+  origin: allowedOrigin,
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Process JSON payloads
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const path = require('path');
+const fs = require('fs');
+const { google } = require('googleapis');
+
+app.get('/attachments/:filename', async (req, res) => {
+  const { filename } = req.params;
+  const localPath = path.resolve(__dirname, '../public/attachments', filename);
+
+  if (fs.existsSync(localPath)) {
+    return res.download(localPath);
+  }
+
+  console.log(`[Attachment Server] Local file not found. Fetching from Gmail on-demand: ${filename}`);
+
+  try {
+    const firstUnderscore = filename.indexOf('_');
+    if (firstUnderscore === -1) {
+      return res.status(404).send('Attachment not found.');
+    }
+
+    const messageId = filename.substring(0, firstUnderscore);
+    const attachmentName = filename.substring(firstUnderscore + 1);
+
+    // Init Gmail Client
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    );
+    oauth2Client.setCredentials({
+      refresh_token: process.env.GMAIL_REFRESH_TOKEN
+    });
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+    // Retrieve email details
+    const emailRes = await gmail.users.messages.get({
+      userId: 'me',
+      id: messageId,
+    });
+
+    const findAttachmentId = (parts) => {
+      for (const part of parts) {
+        if (part.filename && part.filename === attachmentName && part.body && part.body.attachmentId) {
+          return part.body.attachmentId;
+        }
+        if (part.parts) {
+          const found = findAttachmentId(part.parts);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    let attachmentId = null;
+    if (emailRes.data.payload.parts) {
+      attachmentId = findAttachmentId(emailRes.data.payload.parts);
+    } else if (emailRes.data.payload.body && emailRes.data.payload.body.attachmentId) {
+      attachmentId = emailRes.data.payload.body.attachmentId;
+    }
+
+    if (!attachmentId) {
+      return res.status(404).send('Attachment file not found in Gmail message.');
+    }
+
+    // Get attachment payload
+    const attachRes = await gmail.users.messages.attachments.get({
+      userId: 'me',
+      messageId: messageId,
+      id: attachmentId,
+    });
+
+    const base64Data = attachRes.data.data;
+    if (!base64Data) {
+      return res.status(404).send('Empty payload received from Google API.');
+    }
+
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Save to cache
+    const localDir = path.dirname(localPath);
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
+    }
+    fs.writeFileSync(localPath, buffer);
+    console.log(`[Attachment Server] Cached file locally: ${localPath}`);
+
+    return res.download(localPath);
+  } catch (err) {
+    console.error(`[Attachment Server] On-demand download failed:`, err.message);
+    return res.status(500).send(`Failed to fetch attachment: ${err.message}`);
+  }
+});
+
+// Log incoming requests (simplified)
+app.use((req, res, next) => {
+  console.log(`[HTTP] ${req.method} ${req.originalUrl} - ${new Date().toISOString()}`);
+  next();
+});
+
+// Import route handlers
+const authRoutes = require('./routes/auth');
+const noticeRoutes = require('./routes/notices');
+const userRoutes = require('./routes/users');
+const bookmarkRoutes = require('./routes/bookmarks');
+
+// Mount routes
+app.use('/auth', authRoutes);
+app.use('/notices', noticeRoutes);
+app.use('/users', userRoutes);
+app.use('/bookmarks', bookmarkRoutes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('[Error] Unhandled Exception:', err.stack);
+  res.status(500).json({ error: 'Internal Server Error' });
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`CampusNotify backend running on port: ${PORT}`);
+  console.log(`Node Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('CLIENT ID:', process.env.GOOGLE_CLIENT_ID);
+console.log('CLIENT SECRET EXISTS:', !!process.env.GOOGLE_CLIENT_SECRET);
+console.log('REFRESH TOKEN EXISTS:', !!process.env.GMAIL_REFRESH_TOKEN);
+  // Initialize Gmail sync cron job
+  try {
+    initCron();
+  } catch (error) {
+    console.error('Failed to initialize sync cron job:', error.message);
+  }
+});

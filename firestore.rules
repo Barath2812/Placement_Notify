@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Notices Collection Rules
+    match /notices/{noticeId} {
+      // Authenticated students can read notices
+      allow read: if request.auth != null;
+      
+      // Creating, updating, or deleting notices is prohibited from client apps.
+      // The backend sync service uses the Firebase Admin SDK and bypasses these rules.
+      allow write: if false;
+    }
+    
+    // Users Collection Rules
+    match /users/{userId} {
+      // Students can only read and write their own profile document
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

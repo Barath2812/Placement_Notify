@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Notice attachments folder
+    match /attachments/{allPaths=**} {
+      // Authenticated students can read attachments
+      allow read: if request.auth != null;
+      
+      // Uploads or deletions from client devices are forbidden.
+      // The server uses Firebase Admin which bypasses these rules.
+      allow write: if false;
+    }
+  }
+}
