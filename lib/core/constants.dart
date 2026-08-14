@@ -59,13 +59,7 @@ class AppTheme {
 }
 
 class ApiConfig {
-  // Use local host default or configure deployment domain
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5000';
-    }
-    return 'http://10.0.2.2:5000';
-  }
+  static const String baseUrl = 'https://placement-notify.onrender.com';
   
   static String get loginEndpoint => '$baseUrl/auth/login';
   static String get noticesEndpoint => '$baseUrl/notices';
