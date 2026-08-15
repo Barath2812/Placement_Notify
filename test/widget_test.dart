@@ -15,5 +15,8 @@ void main() {
 
     // Verify that the widget tree builds successfully.
     expect(find.byType(CampusNotifyApp), findsOneWidget);
+
+    // Pump pending splash screen timer so the test framework exits cleanly
+    await tester.pump(const Duration(seconds: 3));
   });
 }

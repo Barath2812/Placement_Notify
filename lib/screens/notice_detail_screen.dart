@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
 import '../core/constants.dart';
 import '../models/notice.dart';
 import '../providers/auth_provider.dart';
@@ -59,11 +61,14 @@ class _NoticeDetailScreenState extends State<NoticeDetailScreen> {
 
   Future<void> _openAttachmentUrl(String url) async {
     String targetUrl = url;
-    if (url.startsWith('https://placeholder-url.com')) {
+    if (url.startsWith('https://placeholder-url.com') ||
+        url.contains('localhost:5000') ||
+        url.contains('127.0.0.1:5000') ||
+        url.contains('10.0.2.2:5000')) {
       final Uri tempUri = Uri.parse(url);
       if (tempUri.pathSegments.isNotEmpty) {
         final String filename = tempUri.pathSegments.last;
-        // Replace base with local API base URL
+        // Replace base with production API base URL
         targetUrl = '${ApiConfig.baseUrl}/attachments/${Uri.encodeComponent(filename)}';
       }
     }
@@ -324,12 +329,34 @@ class _NoticeDetailScreenState extends State<NoticeDetailScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              notice.bodyText,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 15,
-                height: 1.6,
+            MarkdownBody(
+              data: notice.bodyText,
+              selectable: true,
+              softLineBreak: true,
+              extensionSet: md.ExtensionSet.gitHubFlavored,
+              onTapLink: (text, href, title) {
+                if (href != null) {
+                  _openAttachmentUrl(href);
+                }
+              },
+              styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                p: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                  height: 1.6,
+                ),
+                a: const TextStyle(
+                  color: AppColors.accent,
+                  decoration: TextDecoration.underline,
+                ),
+                strong: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                em: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 28),

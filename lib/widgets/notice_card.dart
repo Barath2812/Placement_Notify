@@ -30,7 +30,10 @@ class _NoticeCardState extends State<NoticeCard> {
 
   Future<void> _openAttachmentUrl(BuildContext context, String url) async {
     String targetUrl = url;
-    if (url.startsWith('https://placeholder-url.com')) {
+    if (url.startsWith('https://placeholder-url.com') ||
+        url.contains('localhost:5000') ||
+        url.contains('127.0.0.1:5000') ||
+        url.contains('10.0.2.2:5000')) {
       final Uri tempUri = Uri.parse(url);
       if (tempUri.pathSegments.isNotEmpty) {
         final String filename = tempUri.pathSegments.last;

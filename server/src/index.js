@@ -148,12 +148,27 @@ app.listen(PORT, () => {
   console.log(`CampusNotify backend running on port: ${PORT}`);
   console.log(`Node Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log('CLIENT ID:', process.env.GOOGLE_CLIENT_ID);
-console.log('CLIENT SECRET EXISTS:', !!process.env.GOOGLE_CLIENT_SECRET);
-console.log('REFRESH TOKEN EXISTS:', !!process.env.GMAIL_REFRESH_TOKEN);
+  console.log('CLIENT SECRET EXISTS:', !!process.env.GOOGLE_CLIENT_SECRET);
+  console.log('REFRESH TOKEN EXISTS:', !!process.env.GMAIL_REFRESH_TOKEN);
   // Initialize Gmail sync cron job
   try {
     initCron();
   } catch (error) {
     console.error('Failed to initialize sync cron job:', error.message);
+  }
+
+  // Keep-alive self-pinging to prevent Render free-tier spin down
+  const keepAliveUrl = process.env.BACKEND_URL;
+  if (keepAliveUrl && !keepAliveUrl.includes('localhost') && !keepAliveUrl.includes('127.0.0.1')) {
+    const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
+    console.log(`[Keep-Alive] Initializing self-ping service targeting: ${keepAliveUrl}/health`);
+    const https = require('https');
+    setInterval(() => {
+      https.get(`${keepAliveUrl}/health`, (res) => {
+        console.log(`[Keep-Alive] Self-ping sent successfully. Response status: ${res.statusCode}`);
+      }).on('error', (err) => {
+        console.error('[Keep-Alive] Self-ping failed:', err.message);
+      });
+    }, PING_INTERVAL);
   }
 });
