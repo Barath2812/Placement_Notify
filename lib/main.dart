@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'core/constants.dart';
 import 'providers/auth_provider.dart';
@@ -72,6 +73,15 @@ final GoRouter _router = GoRouter(
   ],
 );
 
+// Top-level background message handler — must be a top-level function.
+// Invoked by FCM when the app is terminated or in the background.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Ensure Firebase is initialized in the background isolate
+  await Firebase.initializeApp();
+  print('Background FCM message received: ${message.messageId}');
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -79,6 +89,9 @@ void main() async {
   if (!kIsWeb) {
     try {
       await Firebase.initializeApp();
+
+      // Register background message handler BEFORE other FCM setup
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
       
       // Initialize Push Notifications
       final NotificationService notificationService = NotificationService();

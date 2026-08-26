@@ -36,6 +36,70 @@ async function sendNoticeNotification(noticeId, notice) {
   }
 }
 
+/**
+ * Sends a test notification via the 'college-notices' topic.
+ * Used to verify that FCM topic delivery is working end-to-end.
+ */
+async function sendTestNotificationToTopic() {
+  const message = {
+    notification: {
+      title: '🔔 CampusNotify Test',
+      body: 'FCM topic delivery is working correctly!',
+    },
+    data: {
+      noticeId: 'test_notification',
+      category: 'Test',
+      click_action: 'FLUTTER_NOTIFICATION_CLICK',
+    },
+    topic: 'college-notices',
+  };
+
+  try {
+    console.log('[FCM Test] Sending test notification to topic: college-notices');
+    console.log('[FCM Test] Payload:', JSON.stringify(message, null, 2));
+    const response = await messaging.send(message);
+    console.log('[FCM Test] ✅ Successfully sent topic notification. FCM Message ID:', response);
+    return { success: true, messageId: response };
+  } catch (error) {
+    console.error('[FCM Test] ❌ Error sending topic notification:', error.code, error.message);
+    return { success: false, error: error.message, code: error.code };
+  }
+}
+
+/**
+ * Sends a test notification directly to a specific FCM token.
+ * Used to verify direct token delivery independently of topic subscription.
+ * 
+ * @param {string} fcmToken - The device FCM token to send to
+ */
+async function sendTestNotificationToToken(fcmToken) {
+  const message = {
+    notification: {
+      title: '🔔 CampusNotify Test (Direct)',
+      body: 'FCM direct token delivery is working!',
+    },
+    data: {
+      noticeId: 'test_notification_direct',
+      category: 'Test',
+      click_action: 'FLUTTER_NOTIFICATION_CLICK',
+    },
+    token: fcmToken,
+  };
+
+  try {
+    console.log('[FCM Test] Sending test notification to token:', fcmToken.substring(0, 20) + '...');
+    console.log('[FCM Test] Payload:', JSON.stringify(message, null, 2));
+    const response = await messaging.send(message);
+    console.log('[FCM Test] ✅ Successfully sent direct notification. FCM Message ID:', response);
+    return { success: true, messageId: response };
+  } catch (error) {
+    console.error('[FCM Test] ❌ Error sending direct notification:', error.code, error.message);
+    return { success: false, error: error.message, code: error.code };
+  }
+}
+
 module.exports = {
   sendNoticeNotification,
+  sendTestNotificationToTopic,
+  sendTestNotificationToToken,
 };

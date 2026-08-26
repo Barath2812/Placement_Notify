@@ -121,12 +121,14 @@ const authRoutes = require('./routes/auth');
 const noticeRoutes = require('./routes/notices');
 const userRoutes = require('./routes/users');
 const bookmarkRoutes = require('./routes/bookmarks');
+const notificationRoutes = require('./routes/notifications');
 
 // Mount routes
 app.use('/auth', authRoutes);
 app.use('/notices', noticeRoutes);
 app.use('/users', userRoutes);
 app.use('/bookmarks', bookmarkRoutes);
+app.use('/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
