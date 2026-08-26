@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "135753035123",
+    "project_id": "placement-notice-2c26f",
+    "storage_bucket": "placement-notice-2c26f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:135753035123:android:e94b159ac52965ab2c6906",
+        "android_client_info": {
+          "package_name": "com.example.campus_notify"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "135753035123-23ivl94b5ufasltn68i144l9vpoq6m6b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClltKKJ6RPSgXUASxHqMx-QLqCwMRFqXs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "135753035123-23ivl94b5ufasltn68i144l9vpoq6m6b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

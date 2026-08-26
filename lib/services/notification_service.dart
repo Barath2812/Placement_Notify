@@ -132,7 +132,10 @@ class NotificationService {
     if (fcm == null) return 'mock_fcm_token_xyz';
 
     try {
-      return await fcm.getToken();
+      // VAPID key is used for Web push notifications
+      return await fcm.getToken(
+        vapidKey: 'BIyTHehjzp1FeIWk5VhL0lNrwkI-5cdgg96X3zoV5SEJjxXDjt6858USs87N0AKBLlQNRTZ9kGLoE8W1iqFcj8o',
+      );
     } catch (e) {
       print('Error fetching FCM token: $e');
       return null;

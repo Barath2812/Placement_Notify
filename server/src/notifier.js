@@ -19,8 +19,26 @@ async function sendNoticeNotification(noticeId, notice) {
     // Custom data payload sent to Flutter app
     data: {
       noticeId: noticeId,
-      category: notice.category,
-      click_action: 'FLUTTER_NOTIFICATION_CLICK' // Required for background click actions in older SDK versions
+      category: notice.category || 'General',
+      click_action: 'FLUTTER_NOTIFICATION_CLICK' // Required for background click actions
+    },
+    android: {
+      priority: 'high',
+      notification: {
+        channelId: 'campus_notices_channel',
+        priority: 'max',
+        defaultSound: true,
+        defaultVibrateTimings: true,
+        icon: '@mipmap/ic_launcher',
+      },
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: 'default',
+          contentAvailable: true,
+        },
+      },
     },
     topic: 'college-notices',
   };
@@ -50,6 +68,24 @@ async function sendTestNotificationToTopic() {
       noticeId: 'test_notification',
       category: 'Test',
       click_action: 'FLUTTER_NOTIFICATION_CLICK',
+    },
+    android: {
+      priority: 'high',
+      notification: {
+        channelId: 'campus_notices_channel',
+        priority: 'max',
+        defaultSound: true,
+        defaultVibrateTimings: true,
+        icon: '@mipmap/ic_launcher',
+      },
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: 'default',
+          contentAvailable: true,
+        },
+      },
     },
     topic: 'college-notices',
   };
@@ -82,6 +118,24 @@ async function sendTestNotificationToToken(fcmToken) {
       noticeId: 'test_notification_direct',
       category: 'Test',
       click_action: 'FLUTTER_NOTIFICATION_CLICK',
+    },
+    android: {
+      priority: 'high',
+      notification: {
+        channelId: 'campus_notices_channel',
+        priority: 'max',
+        defaultSound: true,
+        defaultVibrateTimings: true,
+        icon: '@mipmap/ic_launcher',
+      },
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: 'default',
+          contentAvailable: true,
+        },
+      },
     },
     token: fcmToken,
   };
