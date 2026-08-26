@@ -22,6 +22,13 @@ const path = require('path');
 const fs = require('fs');
 const { google } = require('googleapis');
 
+// Serve static assets (logo, etc.) from public/ directory
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Mount public pages (homepage, privacy, terms) — no auth required
+const publicPages = require('./routes/publicPages');
+app.use(publicPages);
+
 app.get('/attachments/:filename', async (req, res) => {
   const { filename } = req.params;
   const localPath = path.resolve(__dirname, '../public/attachments', filename);
@@ -139,90 +146,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Privacy Policy page (required for Google OAuth consent screen)
-app.get('/privacy', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>CampusNotify Privacy Policy</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          max-width: 800px;
-          margin: 40px auto;
-          padding: 0 20px;
-          line-height: 1.6;
-          color: #222;
-        }
-        h1, h2 {
-          color: #1a73e8;
-        }
-      </style>
-    </head>
-    <body>
-      <h1>CampusNotify Privacy Policy</h1>
-
-      <p><strong>Last updated:</strong> August 26, 2026</p>
-
-      <h2>1. Overview</h2>
-      <p>
-        CampusNotify is a college placement notification application
-        designed to provide students with placement and campus-related
-        announcements.
-      </p>
-
-      <h2>2. Information We Access</h2>
-      <p>
-        CampusNotify may access Gmail messages from the authorized Gmail
-        account to identify placement-related announcements distributed
-        through the designated college Google Group.
-      </p>
-
-      <h2>3. Gmail Access</h2>
-      <p>
-        Gmail access is used only to retrieve relevant placement
-        announcements. CampusNotify does not use Gmail access to send
-        emails on behalf of users.
-      </p>
-
-      <h2>4. Data Storage</h2>
-      <p>
-        Relevant placement announcements may be stored in Firebase
-        Firestore so that authenticated users can view them through the
-        CampusNotify application.
-      </p>
-
-      <h2>5. Notifications</h2>
-      <p>
-        CampusNotify may use Firebase Cloud Messaging to send placement
-        notifications to users who have enabled notifications.
-      </p>
-
-      <h2>6. Data Sharing</h2>
-      <p>
-        CampusNotify does not sell or share users' personal information
-        for advertising purposes.
-      </p>
-
-      <h2>7. Data Security</h2>
-      <p>
-        Authentication credentials and API credentials are stored on the
-        server and are not included in the mobile application.
-      </p>
-
-      <h2>8. Contact</h2>
-      <p>
-        For questions regarding this application or this privacy policy,
-        contact:
-        <strong>braj83018@gmail.com</strong>
-      </p>
-    </body>
-    </html>
-  `);
-});
+// Privacy Policy & Terms pages are served by publicPages.js (no auth required)
 
 // Global Error Handler
 app.use((err, req, res, next) => {
